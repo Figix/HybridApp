@@ -1,0 +1,54 @@
+#Page{
+    display: inline-block;
+    margin: 10px;
+    padding: 10px;
+    padding-top: 100px;    
+    border: solid; border-color: black;
+}
+
+.Weeks{
+    position: relative;
+}
+
+.Sun{
+    width: 50px; height: 50px; color : red; display: inline-block;
+    border: solid; border-color: black;
+    margin: 0px;
+    padding: 5px;
+}
+.Mon{
+    width: 50px; height: 50px; color : black; display: inline-block;
+    border: solid; border-color: black;
+    margin: 0px;
+    padding: 5px;
+}
+.Tue{
+    width: 50px; height: 50px; color : black; display: inline-block;
+    border: solid; border-color: black;
+    margin: 0px;
+    padding: 5px;
+}
+.Wed{
+    width: 50px; height: 50px; color : black; display: inline-block;
+    border: solid; border-color: black;
+    margin: 0px;
+    padding: 5px;
+}
+.Thu{
+    width: 50px; height: 50px; color : black; display: inline-block;
+    border: solid; border-color: black;
+    margin: 0px;
+    padding: 5px;
+}
+.Fri{
+    width: 50px; height: 50px; color : black; display: inline-block;
+    border: solid; border-color: black;
+    margin: 0px;
+    padding: 5px;
+}
+.Sat{
+    width: 50px; height: 50px; color : blue; display: inline-block;
+    border: solid; border-color: black;
+    margin: 0px;
+    padding: 5px;
+}
