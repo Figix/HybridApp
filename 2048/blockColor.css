@@ -1,0 +1,88 @@
+.block_2{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #ff0000 inset;
+    background: radial-gradient( white 2%, rgb(255, 71, 71) 100px, rgb(255, 0, 0) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_4{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #ff8c00 inset;
+    background: radial-gradient( white 2%, rgb(255, 140, 71) 100px, rgb(255, 140, 0) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_8{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #ffff00 inset;
+    background: radial-gradient( white 2%, rgb(255, 255, 71) 100px, rgb(255, 255, 0) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_16{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #00ff00 inset;
+    background: radial-gradient( white 2%, rgb(71, 255, 71) 100px, rgb(00, 255, 0) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_32{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #0000ff inset;
+    background: radial-gradient( white 2%, rgb(71, 71, 255) 100px, rgb(0, 0, 255) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_64{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #4b0082 inset;
+    background: radial-gradient( white 2%, rgb(75, 71, 130) 100px, rgb(75, 0, 130) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_128{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #800080 inset;
+    background: radial-gradient( white 2%, rgb(128, 71, 128) 100px, rgb(128, 0, 128) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_256{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #622000 inset;
+    background: radial-gradient( white 2%, rgb(106, 58, 34) 100px, rgb(98, 32, 0) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_512{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #c0c0c0 inset;
+    background: radial-gradient( white 2%, rgb(139, 164, 188) 100px, rgb(192, 192, 192) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_1024{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #ffd700 inset;
+    background: radial-gradient( white 2%, rgb(255, 215, 71) 100px, rgb(255, 215, 0) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}
+.block_2048{
+    width: 100px;
+    height: 100px;
+    box-shadow: 0 0 0 5px #00ffff inset;
+    background: radial-gradient( white 2%, rgb(71, 255, 255) 100px, rgb(0, 255, 255) 50% );
+    border-radius: 20px;
+    z-index: 1;
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="2048.css">
+    <link rel="stylesheet" href="blockColor.css">
+    <link rel="stylesheet" href="position.css">
+</head>
+<body>
+    <script src="https://unpkg.com/vue@3"></script>
+    <!-- vue 프레임워크 가져옴 -->
+    <div id="app">
+        <button class="btn">게임 시작</button>  <div id="scoreBoard"></div>
+        <div class="position"></div> <div class="position"></div> <div class="position"></div> <div class="position"></div> 
+        <div class="position"></div> <div class="position"></div> <div class="position"></div> <div class="position"></div>
+        <div class="position"></div> <div class="position"></div> <div class="position"></div> <div class="position"></div>
+        <div class="position"></div> <div class="position"></div> <div class="position"></div> <div class="position"></div>
+        <div id="gameboard">
+                <div class="backblock">1</div> <div class="backblock">2</div> <div class="backblock">3</div> <div class="backblock">4</div>
+                <div class="backblock">5</div> <div class="backblock">6</div> <div class="backblock">7</div> <div class="backblock">8</div>
+                <div class="backblock">9</div> <div class="backblock">10</div> <div class="backblock">11</div> <div class="backblock">12</div>
+                <div class="backblock">13</div> <div class="backblock">14</div> <div class="backblock">15</div> <div class="backblock">16</div>
+        </div>
+    </div>
+
+
+    <script src="moving.js"></script>
+    <!-- <script type="module" src="test.js"></script> -->
+</body>
+</html>
