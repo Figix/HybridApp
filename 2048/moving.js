@@ -15,6 +15,7 @@ class BlockPrefab{
         this.Value=value    //값
         this.Elementsinfo=elementsinfo  //elements
         this.Added=true //true로 되어있어야지 if(true && true) 처리하기 쉬움
+        this.Block=true
     }
 }
 /* js에서 다룰 구조체 */
@@ -32,13 +33,26 @@ for(var i=0;i<NbyN;i++){
 /* CSS class List */
 let classNameList = new Array(11)
 for(let z=0;z<classNameList.length;z++){
-    classNameList[z]='block_'+Math.pow(2,z+1)    
-    console.log(classNameList[z])
+    classNameList[z]='block_'+Math.pow(2,z+1)
 }
 /*score*/
 var score=0
 var scoreBoard=document.getElementById("scoreBoard")
 
+/* 이벤트 Vector Queue */
+class VecQList{
+    constructor(){
+        this.VecQ=Array.from(Array(NbyN), () => new Array(NbyN).fill(new VecQ))
+    }
+}
+class VecQ{
+    constructor(){
+        this.V=new Grid(0,0)
+        this.EndPos=new Grid(0,0)
+        this.Value=0
+    }
+}
+var vecQList = new VecQList()
 /*-------------------버튼 초기화 부분---------------------------------------------------------*/
 let btn = document.getElementsByClassName("btn")
 btn[0].addEventListener("click",function(event){
@@ -55,7 +69,6 @@ btn[0].addEventListener("click",function(event){
     fillScore(score)
     /* 시작 랜덤 값 추가 */
     Random_generator(true)
-    fillStyle()//그리기
 })
 /*-------------------------------------------------------------------------------------------*/
 //#endregion
@@ -159,7 +172,6 @@ function printMatrix(){ //Vaule값 보여주기
     console.log(blockPrefab[3][0].Value+" "+blockPrefab[3][1].Value+" "+blockPrefab[3][2].Value+" "+blockPrefab[3][3].Value)
 }
 function fillScore(num){
-    console.log(typeof num)
     scoreBoard.innerHTML="Score : "+num.toString()
 }
 //#endregion
@@ -193,56 +205,100 @@ function keystate(event){
     }
 }
 
+/*오른쪽 이동 */
 function move_Right(){
+    /*index 이동 전*/
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN;j++){
+            vecQList.VecQ[i][j].Value=blockPrefab[i][j].Value;
+            console.log(blockPrefab[i][j].Value+" "+vecQList.VecQ[i][j].Value)
+        }
+    }
+
+    console.log(vecQList.VecQ[0][0].Value+" "+vecQList.VecQ[0][1].Value+" "+vecQList.VecQ[0][2].Value+" "+vecQList.VecQ[0][3].Value)
+    console.log(vecQList.VecQ[1][0].Value+" "+vecQList.VecQ[1][1].Value+" "+vecQList.VecQ[1][2].Value+" "+vecQList.VecQ[1][3].Value)
+    console.log(vecQList.VecQ[2][0].Value+" "+vecQList.VecQ[2][1].Value+" "+vecQList.VecQ[2][2].Value+" "+vecQList.VecQ[2][3].Value)
+    console.log(vecQList.VecQ[3][0].Value+" "+vecQList.VecQ[3][1].Value+" "+vecQList.VecQ[3][2].Value+" "+vecQList.VecQ[3][3].Value)
+
+    /*index이동 완료*/
     for(let z=0;z<NbyN-1;z++){
-        for(let j=NbyN-2; j>=0; j--){
-            for(let i=0;i<NbyN;i++){
-                if(blockPrefab[i][j+1].Value==0){        //우측 공간이 비어있을 경우
-                    //애니메이션 처리가 들어가야할 부분
-                    blockPrefab[i][j+1].Value=blockPrefab[i][j].Value
-                    blockPrefab[i][j].Value=0
-                } else{                     //우측 공간에 무엇인가 있을 경우
-                    if(blockPrefab[i][j].Value==blockPrefab[i][j+1].Value){         //같은 값이 있을 경우
-                        if(blockPrefab[i][j].Added&&blockPrefab[i][j+1].Added){     //조합했던 이력 확인
-                            blockPrefab[i][j+1].Value=blockPrefab[i][j].Value+blockPrefab[i][j+1].Value
-                            blockPrefab[i][j].Value=0
-                            blockPrefab[i][j+1].Added=false //조합 비활성화
-                            score+=100
-                            fillScore(score)
-                        }
-                    }
-                }
-                fillStyle()
+        Right_index()
+    }
+    /*Grid형태 Vector*/
+    vector=calculate_Vector(blockPrefab[0][0].Grid,blockPrefab[0],[1].Grid)
+    /*Grid형태 EndPos*/
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN;j++){
+            vecQList.VecQ[i][j].EndPos=blockPrefab[i][NbyN-1].Grid
+            vecQList.VecQ[i][j].V=(0,0)
+            if(j<3){vecQList.VecQ[i][j].V=vector}
+        }
+    }   //여기까지 EndLine인 배열 끝에 있는 VecQ를 제외한 동일한 벡터값과 EndPos를 EndLine으로 지정함
+    //이후부터는 Added를 확인해서 각각의 EndPos를 조정할 예정이다
+    // console.log("block")
+    // console.log(blockPrefab[0][0].Block+" "+blockPrefab[0][1].Block+" "+blockPrefab[0][2].Block+" "+blockPrefab[0][3].Block)
+    // console.log(blockPrefab[1][0].Block+" "+blockPrefab[1][1].Block+" "+blockPrefab[1][2].Block+" "+blockPrefab[1][3].Block)
+    // console.log(blockPrefab[2][0].Block+" "+blockPrefab[2][1].Block+" "+blockPrefab[2][2].Block+" "+blockPrefab[2][3].Block)
+    // console.log(blockPrefab[3][0].Block+" "+blockPrefab[3][1].Block+" "+blockPrefab[3][2].Block+" "+blockPrefab[3][3].Block)
+    // console.log("Added")
+    // console.log(blockPrefab[0][0].Added+" "+blockPrefab[0][1].Added+" "+blockPrefab[0][2].Added+" "+blockPrefab[0][3].Added)
+    // console.log(blockPrefab[1][0].Added+" "+blockPrefab[1][1].Added+" "+blockPrefab[1][2].Added+" "+blockPrefab[1][3].Added)
+    // console.log(blockPrefab[2][0].Added+" "+blockPrefab[2][1].Added+" "+blockPrefab[2][2].Added+" "+blockPrefab[2][3].Added)
+    // console.log(blockPrefab[3][0].Added+" "+blockPrefab[3][1].Added+" "+blockPrefab[3][2].Added+" "+blockPrefab[3][3].Added)
+
+    ///여기서부터 생각할것
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN-1;j++){
+            for(let z=NbyN-1-j;z>=1;z--){
+                
             }
         }
     }
+    console.log(vecQList.VecQ[0][0].EndPos.X+" "+vecQList.VecQ[0][1].EndPos.X+" "+
+        vecQList.VecQ[0][2].EndPos.X+" "+vecQList.VecQ[0][3].EndPos.X)
+    console.log(vecQList.VecQ[1][0].EndPos.X+" "+vecQList.VecQ[1][1].EndPos.X+" "+
+        vecQList.VecQ[1][2].EndPos.X+" "+vecQList.VecQ[1][3].EndPos.X)
+    console.log(vecQList.VecQ[2][0].EndPos.X+" "+vecQList.VecQ[2][1].EndPos.X+" "+
+        vecQList.VecQ[2][2].EndPos.X+" "+vecQList.VecQ[2][3].EndPos.X)
+    console.log(vecQList.VecQ[3][0].EndPos.X+" "+vecQList.VecQ[3][1].EndPos.X+" "+
+        vecQList.VecQ[3][2].EndPos.X+" "+vecQList.VecQ[3][3].EndPos.X)
+    
+    fillStyle()
+    fillScore(score)
     for(let i=0;i<NbyN;i++){
         for(let j=0;j<NbyN;j++){
             blockPrefab[i][j].Added=true
+            blockPrefab[i][j].Block=true
         }
     }
 }
+function Right_index(){
+    for(let j=NbyN-2; j>=0; j--){
+        for(let i=0;i<NbyN;i++){
+            if(blockPrefab[i][j+1].Value==0){        //우측 공간이 비어있을 경우
+                blockPrefab[i][j+1].Value=blockPrefab[i][j].Value
+                blockPrefab[i][j].Value=0
+            } else{                     //우측 공간에 무엇인가 있을 경우
+                if(blockPrefab[i][j].Value==blockPrefab[i][j+1].Value){         //같은 값이 있을 경우
+                    if(blockPrefab[i][j].Added&&blockPrefab[i][j+1].Added){     //조합했던 이력 확인
+                        blockPrefab[i][j+1].Value=blockPrefab[i][j].Value+blockPrefab[i][j+1].Value
+                        blockPrefab[i][j].Value=0
+                        blockPrefab[i][j+1].Added=false //조합 비활성화
+                        score+=100
+                        fillScore(score)
+                    }
+                } 
+                else{
+                    if(blockPrefab[i][j].Value!=0){ blockPrefab[i][j+1].Block=false }
+                }
+            }
+        }
+    }
+}
+/*왼쪽 이동 */
 function move_Left(){
     for(let z=0;z<NbyN-1;z++){
-        for(let j=1;j<NbyN;j++){
-            for(let i=0;i<NbyN;i++){
-                if(blockPrefab[i][j-1].Value==0){        //우측 공간이 비어있을 경우   
-                    blockPrefab[i][j-1].Value=blockPrefab[i][j].Value
-                    blockPrefab[i][j].Value=0
-                } else{                     //우측 공간에 무엇인가 있을 경우
-                    if(blockPrefab[i][j].Value==blockPrefab[i][j-1].Value){         //같은 값이 있을 경우
-                        if(blockPrefab[i][j].Added&&blockPrefab[i][j-1].Added){      //조합했던 이력 확인
-                            blockPrefab[i][j-1].Value=blockPrefab[i][j].Value+blockPrefab[i][j-1].Value
-                            blockPrefab[i][j].Value=0
-                            blockPrefab[i][j-1].Added=false //조합 비활성화
-                            score+=100
-                            fillScore(score)
-                        }    
-                    }
-                }
-                fillStyle()
-            }
-        }
+        Left_index()
     }
     for(let i=0;i<NbyN;i++){
         for(let j=0;j<NbyN;j++){
@@ -250,6 +306,29 @@ function move_Left(){
         }
     }
 }
+function Left_index(){
+    for(let j=1;j<NbyN;j++){
+        for(let i=0;i<NbyN;i++){
+            if(blockPrefab[i][j-1].Value==0){        //우측 공간이 비어있을 경우   
+                blockPrefab[i][j-1].Value=blockPrefab[i][j].Value
+                blockPrefab[i][j].Value=0
+            } else{                     //우측 공간에 무엇인가 있을 경우
+                if(blockPrefab[i][j].Value==blockPrefab[i][j-1].Value){         //같은 값이 있을 경우
+                    if(blockPrefab[i][j].Added&&blockPrefab[i][j-1].Added){      //조합했던 이력 확인
+                        blockPrefab[i][j-1].Value=blockPrefab[i][j].Value+blockPrefab[i][j-1].Value
+                        blockPrefab[i][j].Value=0
+                        blockPrefab[i][j-1].Added=false //조합 비활성화
+                        score+=100
+                        fillScore(score)
+                    }    
+                }
+            }
+            fillStyle()
+        }
+    }
+}
+
+/* 상단이동 */
 function move_Up(){
     for(let z=0;z<NbyN-1;z++){
         for(let i=1;i<NbyN;i++){
@@ -278,6 +357,8 @@ function move_Up(){
         }
     }
 }
+
+/* 하단이동 */
 function move_Down(){
     for(let z=0;z<NbyN-1;z++){
         for(let i=NbyN-2;i>=0;i--){
@@ -306,6 +387,13 @@ function move_Down(){
         }
     }
 }
+
+//#region Vector계산용 
+function calculate_Vector(A,B){
+    let tmp_vector=new Grid(0,0)
+    tmp_vector.X=(B.X-A.X)/15
+    tmp_vector.Y=(B.Y-A.Y)/15
+    return tmp_vector
+}
+
 //#endregion
-
-
