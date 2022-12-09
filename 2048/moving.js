@@ -16,6 +16,12 @@ class BlockPrefab{
         this.Elementsinfo=elementsinfo  //elements
         this.Added=true //true로 되어있어야지 if(true && true) 처리하기 쉬움
         this.Block=true
+        this.BeginPos=new Grid(0,0)
+        this.V=new Grid(0,0)
+        this.EndPos=new Grid(0,0)
+        this.count=0
+        this.switch1=false
+        this.switch2=false
     }
 }
 /* js에서 다룰 구조체 */
@@ -25,6 +31,7 @@ for(var i=0;i<NbyN;i++){
         blockPrefab[i][j]=new BlockPrefab()
         blockPrefab[i][j].Grid=new Grid(j*100,i*100+200)
         blockPrefab[i][j].Value=0
+        blockPrefab[i][j].count=0
         blockPrefab[i][j].Elementsinfo=pos[(i*NbyN)+j]
         blockPrefab[i][j].Elementsinfo.style.marginTop = blockPrefab[i][j].Grid.Y+"px";
         blockPrefab[i][j].Elementsinfo.style.marginLeft = blockPrefab[i][j].Grid.X+"px";
@@ -38,39 +45,31 @@ for(let z=0;z<classNameList.length;z++){
 /*score*/
 var score=0
 var scoreBoard=document.getElementById("scoreBoard")
-
-/* 이벤트 Vector Queue */
-class VecQList{
-    constructor(){
-        this.VecQ=Array.from(Array(NbyN), () => new Array(NbyN).fill(new VecQ))
-    }
-}
-class VecQ{
-    constructor(){
-        this.V=new Grid(0,0)
-        this.EndPos=new Grid(0,0)
-        this.Value=0
-    }
-}
-var vecQList = new VecQList()
-/*-------------------버튼 초기화 부분---------------------------------------------------------*/
+/*---------------------------------------------버튼 초기화 부분---------------------------------------------------------*/
 let btn = document.getElementsByClassName("btn")
 btn[0].addEventListener("click",function(event){
-
+    clearInterval(move_animation_right)
+    clearInterval(move_animation_Down)
 
     /* 블럭 값 관련 초기화 */
     for(var i=0;i<NbyN;i++){
         for(var j=0;j<NbyN;j++){
             blockPrefab[i][j].Value=0
+            blockPrefab[i][j].count=1
+            blockPrefab[i][j].switch1=false
+            blockPrefab[i][j].switch2=false
         }
     }
+    anime_bool=true
+
     /*score 초기화*/
     score=0
     fillScore(score)
     /* 시작 랜덤 값 추가 */
     Random_generator(true)
+    setBeginPos()
 })
-/*-------------------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------------------------------------------------*/
 //#endregion
 
 //#region       blockprefab관련 함수들
@@ -86,10 +85,11 @@ function Random_generator(aaa){ //매개변수가 true: 2or4, false: 2 생성, r
     for(var i=0;i<NbyN;i++){
         for(var j=0;j<NbyN;j++){
             if(blockPrefab[i][j].Value == 0){    //count를 통해 배열안 0의 갯수 찾기
-                count++ 
+                count++
             }
         }
     }
+
     if(count==0){return false}
     let rnd = Math.floor(Math.random()*(count-1))+1
     count=0
@@ -99,6 +99,7 @@ function Random_generator(aaa){ //매개변수가 true: 2or4, false: 2 생성, r
                 count++
                 if(count==rnd){
                     blockPrefab[i][j].Value=num
+
                     fillStyle()
                     return true
                 }
@@ -107,6 +108,7 @@ function Random_generator(aaa){ //매개변수가 true: 2or4, false: 2 생성, r
     }
     return true
 }
+
 function removeStyle(){
     for(let i=0;i<NbyN;i<i++){  //모든 사각형 배열안 클래스 지우기
         for(let j=0;j<NbyN;j++){
@@ -116,6 +118,7 @@ function removeStyle(){
         }
     }
 }
+
 function fillStyle(){   //Vaule값에 맞추어서 그리기
     removeStyle()
     for(let i=0;i<NbyN;i<i++){
@@ -165,235 +168,406 @@ function fillStyle(){   //Vaule값에 맞추어서 그리기
         }
     }
 }
+
 function printMatrix(){ //Vaule값 보여주기
     console.log(blockPrefab[0][0].Value+" "+blockPrefab[0][1].Value+" "+blockPrefab[0][2].Value+" "+blockPrefab[0][3].Value)
     console.log(blockPrefab[1][0].Value+" "+blockPrefab[1][1].Value+" "+blockPrefab[1][2].Value+" "+blockPrefab[1][3].Value)
     console.log(blockPrefab[2][0].Value+" "+blockPrefab[2][1].Value+" "+blockPrefab[2][2].Value+" "+blockPrefab[2][3].Value)
     console.log(blockPrefab[3][0].Value+" "+blockPrefab[3][1].Value+" "+blockPrefab[3][2].Value+" "+blockPrefab[3][3].Value)
 }
+
 function fillScore(num){
     scoreBoard.innerHTML="Score : "+num.toString()
 }
+function setBeginPos(){
+    for(let i=0;i<NbyN;i++){
+        for(var j=0;j<NbyN;j++){
+            if(blockPrefab[i][j].Value==0){
+                blockPrefab[i][j].BeginPos=new Grid(j,i)
+            } else{
+                blockPrefab[i][j].BeginPos=new Grid(j,i)
+                console.log("X : "+blockPrefab[i][j].BeginPos.X+",Y : "+blockPrefab[i][j].BeginPos.Y)
+            }
+            blockPrefab[i][j].count=1
+            blockPrefab[i][j].switch1=false
+            blockPrefab[i][j].switch2=false
+        }
+    }
+}
+
 //#endregion
 
 //#region 키보드 입력 관련
 document.addEventListener('keydown', (event) => { keystate(event) });
 // window.onkeydown = (e)=>keystate(e); 이런 방식도 존재함
-
+var anime_bool=true;
+var move_animation_right
+var move_animation_Down
 function keystate(event){
     switch(event.code){
         case "ArrowRight":
-            console.log(event);
-            move_Right()
-            Random_generator(false)
+            if(anime_bool){
+                console.log(event);
+                move_Right()
+                anime_bool=false;
+                move_animation_right = setInterval(moving_plus,1000/30)
+            }
             break;
+            
+
         case "ArrowLeft":
-            console.log(event);
-            move_Left()
-            Random_generator(false)
+            if(anime_bool){
+                console.log(event)
+                move_Left()
+                anime_bool=false
+                move_animation_Down = setInterval(moving_minus,1000/30)
+            }
             break;
+
         case "ArrowUp":
-            console.log(event);
-            move_Up()
-            Random_generator(false)
+            if(anime_bool){
+                console.log(event)
+                move_Up()
+                anime_bool=false
+                move_animation_Down = setInterval(moving_minus,1000/30)
+            }
             break;
+
         case "ArrowDown":
-            console.log(event);
-            move_Down()
-            Random_generator(false)
-            break;    
+            if(anime_bool){
+                console.log(event);
+                move_Down()
+                anime_bool=false;
+                move_animation_right = setInterval(moving_plus,1000/30)
+            }
+            break;
+    }
+}
+
+var c=0
+var vector
+
+function moving_plus(){
+    
+
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN;j++){
+
+            let test1 = blockPrefab[i][j].BeginPos.Y
+            let test2 = blockPrefab[i][j].BeginPos.X
+            let ttest1 = blockPrefab[i][j].EndPos.Y
+            let ttest2 = blockPrefab[i][j].EndPos.X
+
+                blockPrefab[test1][test2].switch=2
+                if( parseFloat(blockPrefab[ttest1][ttest2].Elementsinfo.style.marginLeft) > parseFloat(blockPrefab[test1][test2].Elementsinfo.style.marginLeft) ){
+                    blockPrefab[test1][test2].Elementsinfo.style.marginLeft = parseInt(blockPrefab[test1][test2].Elementsinfo.style.marginLeft) + parseInt(blockPrefab[i][j].V.X) + "px"
+                } else { 
+                    blockPrefab[test1][test2].switch1=true
+                    blockPrefab[test1][test2].Elementsinfo.style.marginLeft =  parseInt(blockPrefab[ttest1][ttest2].Elementsinfo.style.marginLeft)+"px"
+                }
+                console.log("1 : "+blockPrefab[test1][test2].switch1)
+                if( parseFloat(blockPrefab[ttest1][ttest2].Elementsinfo.style.marginTop) > parseFloat(blockPrefab[test1][test2].Elementsinfo.style.marginTop)){
+                    blockPrefab[test1][test2].Elementsinfo.style.marginTop = parseInt(blockPrefab[test1][test2].Elementsinfo.style.marginTop) + parseInt(blockPrefab[i][j].V.Y) + "px"            
+                } else {
+                    blockPrefab[test1][test2].switch2=true
+                    blockPrefab[test1][test2].Elementsinfo.style.marginTop = parseInt(blockPrefab[ttest1][ttest2].Elementsinfo.style.marginTop)+"px"
+                }
+                console.log("2 : "+blockPrefab[test1][test2].switch2)
+            
+        }
+    }
+
+    var switchcounter=0
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN;j++){
+            if((blockPrefab[i][j].switch1==true) && (blockPrefab[i][j].switch2==true)){
+                switchcounter++
+            }
+        }
+    }
+
+    if(switchcounter==16){
+        fillStyle()
+        fillScore(score)
+        for(let i=0;i<NbyN;i++){
+            for(let j=0;j<NbyN;j++){
+                blockPrefab[i][j].Added=true
+                blockPrefab[i][j].Block=true
+                blockPrefab[i][j].count=1
+                blockPrefab[i][j].Elementsinfo.style.marginTop=  blockPrefab[i][j].Grid.Y+"px";
+                blockPrefab[i][j].Elementsinfo.style.marginLeft= blockPrefab[i][j].Grid.X+"px";
+            }
+        }
+        Random_generator(false)
+        setBeginPos()
+        clearInterval(move_animation_right)
+        clearInterval(move_animation_Down)
+        anime_bool=true
+    }
+}
+function moving_minus(){
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN;j++){
+
+            let test1 = blockPrefab[i][j].BeginPos.Y
+            let test2 = blockPrefab[i][j].BeginPos.X
+            let ttest1 = blockPrefab[i][j].EndPos.Y
+            let ttest2 = blockPrefab[i][j].EndPos.X
+
+                blockPrefab[test1][test2].switch=2
+                if( parseFloat( blockPrefab[ttest1][ttest2].Elementsinfo.style.marginLeft ) < parseFloat(blockPrefab[test1][test2].Elementsinfo.style.marginLeft) ) {
+                    blockPrefab[test1][test2].Elementsinfo.style.marginLeft = parseInt(blockPrefab[test1][test2].Elementsinfo.style.marginLeft) + parseInt(blockPrefab[i][j].V.X) + "px"
+                } else {
+                    blockPrefab[test1][test2].switch1=true
+                    blockPrefab[test1][test2].Elementsinfo.style.marginLeft = parseInt(blockPrefab[ttest1][ttest2].Elementsinfo.style.marginLeft)+"px"
+                }
+                console.log("1 : "+blockPrefab[test1][test2].switch1)
+
+                if( parseFloat( blockPrefab[ttest1][ttest2].Elementsinfo.style.marginTop ) < parseFloat(blockPrefab[test1][test2].Elementsinfo.style.marginTop) ) {
+                    blockPrefab[test1][test2].Elementsinfo.style.marginTop = parseInt(blockPrefab[test1][test2].Elementsinfo.style.marginTop) + parseInt(blockPrefab[i][j].V.Y) + "px"
+                } else {
+                    blockPrefab[test1][test2].switch2=true
+                    blockPrefab[test1][test2].Elementsinfo.style.marginTop = parseInt(blockPrefab[ttest1][ttest2].Elementsinfo.style.marginTop)+"px"
+                }
+                console.log("2 : "+blockPrefab[test1][test2].switch2)
+        }
+    }
+
+    var switchcounter=0
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN;j++){
+            if( (blockPrefab[i][j].switch1==true) && (blockPrefab[i][j].switch2==true) ){
+                switchcounter++
+            }
+        }
+    }
+
+    if(switchcounter==16){
+        fillStyle()
+        fillScore(score)
+        for(let i=0;i<NbyN;i++){
+            for(let j=0;j<NbyN;j++){
+                blockPrefab[i][j].Added=true
+                blockPrefab[i][j].Block=true
+                blockPrefab[i][j].count=1
+                blockPrefab[i][j].Elementsinfo.style.marginTop=  blockPrefab[i][j].Grid.Y+"px";
+                blockPrefab[i][j].Elementsinfo.style.marginLeft= blockPrefab[i][j].Grid.X+"px";
+            }
+        }
+        Random_generator(false)
+        setBeginPos()
+        clearInterval(move_animation_right)
+        clearInterval(move_animation_Down)
+        anime_bool=true
     }
 }
 
 /*오른쪽 이동 */
 function move_Right(){
-    /*index 이동 전*/
-    for(let i=0;i<NbyN;i++){
-        for(let j=0;j<NbyN;j++){
-            vecQList.VecQ[i][j].Value=blockPrefab[i][j].Value;
-            console.log(blockPrefab[i][j].Value+" "+vecQList.VecQ[i][j].Value)
-        }
-    }
+    /*위치 계산 완료*/
+    Right_index()
 
-    console.log(vecQList.VecQ[0][0].Value+" "+vecQList.VecQ[0][1].Value+" "+vecQList.VecQ[0][2].Value+" "+vecQList.VecQ[0][3].Value)
-    console.log(vecQList.VecQ[1][0].Value+" "+vecQList.VecQ[1][1].Value+" "+vecQList.VecQ[1][2].Value+" "+vecQList.VecQ[1][3].Value)
-    console.log(vecQList.VecQ[2][0].Value+" "+vecQList.VecQ[2][1].Value+" "+vecQList.VecQ[2][2].Value+" "+vecQList.VecQ[2][3].Value)
-    console.log(vecQList.VecQ[3][0].Value+" "+vecQList.VecQ[3][1].Value+" "+vecQList.VecQ[3][2].Value+" "+vecQList.VecQ[3][3].Value)
-
-    /*index이동 완료*/
-    for(let z=0;z<NbyN-1;z++){
-        Right_index()
-    }
     /*Grid형태 Vector*/
-    vector=calculate_Vector(blockPrefab[0][0].Grid,blockPrefab[0],[1].Grid)
+    vector=new Grid(50,0)
     /*Grid형태 EndPos*/
     for(let i=0;i<NbyN;i++){
         for(let j=0;j<NbyN;j++){
-            vecQList.VecQ[i][j].EndPos=blockPrefab[i][NbyN-1].Grid
-            vecQList.VecQ[i][j].V=(0,0)
-            if(j<3){vecQList.VecQ[i][j].V=vector}
+            if(blockPrefab[i][j].BeginPos.X>=0){
+                console.log("i : "+i+", j : "+j+", "+blockPrefab[i][j].BeginPos.X+" "+blockPrefab[i][j].BeginPos.Y)
+                console.log("i : "+i+", j : "+j+", "+blockPrefab[i][j].EndPos.X+" "+blockPrefab[i][j].EndPos.Y)    
+            }
+            blockPrefab[i][j].V=new Grid(0,0)
+            if(j<3){blockPrefab[i][j].V=vector}
+            console.log(blockPrefab[i][j].V)
         }
     }   //여기까지 EndLine인 배열 끝에 있는 VecQ를 제외한 동일한 벡터값과 EndPos를 EndLine으로 지정함
-    //이후부터는 Added를 확인해서 각각의 EndPos를 조정할 예정이다
-    // console.log("block")
-    // console.log(blockPrefab[0][0].Block+" "+blockPrefab[0][1].Block+" "+blockPrefab[0][2].Block+" "+blockPrefab[0][3].Block)
-    // console.log(blockPrefab[1][0].Block+" "+blockPrefab[1][1].Block+" "+blockPrefab[1][2].Block+" "+blockPrefab[1][3].Block)
-    // console.log(blockPrefab[2][0].Block+" "+blockPrefab[2][1].Block+" "+blockPrefab[2][2].Block+" "+blockPrefab[2][3].Block)
-    // console.log(blockPrefab[3][0].Block+" "+blockPrefab[3][1].Block+" "+blockPrefab[3][2].Block+" "+blockPrefab[3][3].Block)
-    // console.log("Added")
-    // console.log(blockPrefab[0][0].Added+" "+blockPrefab[0][1].Added+" "+blockPrefab[0][2].Added+" "+blockPrefab[0][3].Added)
-    // console.log(blockPrefab[1][0].Added+" "+blockPrefab[1][1].Added+" "+blockPrefab[1][2].Added+" "+blockPrefab[1][3].Added)
-    // console.log(blockPrefab[2][0].Added+" "+blockPrefab[2][1].Added+" "+blockPrefab[2][2].Added+" "+blockPrefab[2][3].Added)
-    // console.log(blockPrefab[3][0].Added+" "+blockPrefab[3][1].Added+" "+blockPrefab[3][2].Added+" "+blockPrefab[3][3].Added)
-
-    ///여기서부터 생각할것
-    for(let i=0;i<NbyN;i++){
-        for(let j=0;j<NbyN-1;j++){
-            for(let z=NbyN-1-j;z>=1;z--){
-                
-            }
-        }
-    }
-    console.log(vecQList.VecQ[0][0].EndPos.X+" "+vecQList.VecQ[0][1].EndPos.X+" "+
-        vecQList.VecQ[0][2].EndPos.X+" "+vecQList.VecQ[0][3].EndPos.X)
-    console.log(vecQList.VecQ[1][0].EndPos.X+" "+vecQList.VecQ[1][1].EndPos.X+" "+
-        vecQList.VecQ[1][2].EndPos.X+" "+vecQList.VecQ[1][3].EndPos.X)
-    console.log(vecQList.VecQ[2][0].EndPos.X+" "+vecQList.VecQ[2][1].EndPos.X+" "+
-        vecQList.VecQ[2][2].EndPos.X+" "+vecQList.VecQ[2][3].EndPos.X)
-    console.log(vecQList.VecQ[3][0].EndPos.X+" "+vecQList.VecQ[3][1].EndPos.X+" "+
-        vecQList.VecQ[3][2].EndPos.X+" "+vecQList.VecQ[3][3].EndPos.X)
-    
-    fillStyle()
-    fillScore(score)
-    for(let i=0;i<NbyN;i++){
-        for(let j=0;j<NbyN;j++){
-            blockPrefab[i][j].Added=true
-            blockPrefab[i][j].Block=true
-        }
-    }
+   
 }
 function Right_index(){
-    for(let j=NbyN-2; j>=0; j--){
-        for(let i=0;i<NbyN;i++){
-            if(blockPrefab[i][j+1].Value==0){        //우측 공간이 비어있을 경우
-                blockPrefab[i][j+1].Value=blockPrefab[i][j].Value
-                blockPrefab[i][j].Value=0
-            } else{                     //우측 공간에 무엇인가 있을 경우
-                if(blockPrefab[i][j].Value==blockPrefab[i][j+1].Value){         //같은 값이 있을 경우
-                    if(blockPrefab[i][j].Added&&blockPrefab[i][j+1].Added){     //조합했던 이력 확인
-                        blockPrefab[i][j+1].Value=blockPrefab[i][j].Value+blockPrefab[i][j+1].Value
-                        blockPrefab[i][j].Value=0
-                        blockPrefab[i][j+1].Added=false //조합 비활성화
-                        score+=100
-                        fillScore(score)
+    for(let i=0;i<NbyN;i++){
+        blockPrefab[i][3].EndPos=new Grid(3,i)
+    }
+    for(let i=0;i<NbyN;i++){
+        for(let j=0;j<NbyN-2;j++){
+            blockPrefab[i][j].EndPos=new Grid(j+1,i)
+        }
+    }
+    for(let z=0;z<NbyN-1;z++){
+        for(let j=NbyN-2; j>=0; j--){
+            for(let i=0;i<NbyN;i++){
+                if(blockPrefab[i][j+1].Value==0){        //우측 공간이 비어있을 경우
+                    blockPrefab[i][j].EndPos = new Grid(j+1,i)
+                    blockPrefab[i][j+1].Value=blockPrefab[i][j].Value
+                    blockPrefab[i][j].Value=0
+                } else{                     //우측 공간에 무엇인가 있을 경우
+                    if(blockPrefab[i][j].Value==blockPrefab[i][j+1].Value){         //같은 값이 있을 경우
+                        if(blockPrefab[i][j].Added&&blockPrefab[i][j+1].Added){     //조합했던 이력 확인
+                            blockPrefab[i][j].EndPos = new Grid(j+1,i)
+                            blockPrefab[i][j+1].Value=blockPrefab[i][j].Value+blockPrefab[i][j+1].Value
+                            blockPrefab[i][j].Value=0
+                            blockPrefab[i][j+1].Added=false //조합 비활성화
+                            score+=100
+                        }
+                        else{blockPrefab[i][j].EndPos = new Grid(j,i)}
+                    } 
+                    else{
+                        if(blockPrefab[i][j].Value!=0){  blockPrefab[i][j].EndPos = new Grid(j,i)}
                     }
-                } 
-                else{
-                    if(blockPrefab[i][j].Value!=0){ blockPrefab[i][j+1].Block=false }
                 }
+
             }
         }
     }
 }
+
 /*왼쪽 이동 */
 function move_Left(){
-    for(let z=0;z<NbyN-1;z++){
-        Left_index()
-    }
+    Left_index()
+
+    vector=new Grid(-50,0)
+
     for(let i=0;i<NbyN;i++){
         for(let j=0;j<NbyN;j++){
-            blockPrefab[i][j].Added=true
+            blockPrefab[i][j].V=new Grid(0,0)
+            if(j>0){blockPrefab[i][j].V=vector}
+            console.log(blockPrefab[i][j].V)
         }
     }
 }
 function Left_index(){
-    for(let j=1;j<NbyN;j++){
-        for(let i=0;i<NbyN;i++){
-            if(blockPrefab[i][j-1].Value==0){        //우측 공간이 비어있을 경우   
-                blockPrefab[i][j-1].Value=blockPrefab[i][j].Value
-                blockPrefab[i][j].Value=0
-            } else{                     //우측 공간에 무엇인가 있을 경우
-                if(blockPrefab[i][j].Value==blockPrefab[i][j-1].Value){         //같은 값이 있을 경우
-                    if(blockPrefab[i][j].Added&&blockPrefab[i][j-1].Added){      //조합했던 이력 확인
-                        blockPrefab[i][j-1].Value=blockPrefab[i][j].Value+blockPrefab[i][j-1].Value
-                        blockPrefab[i][j].Value=0
-                        blockPrefab[i][j-1].Added=false //조합 비활성화
-                        score+=100
-                        fillScore(score)
-                    }    
+    for(let i=0;i<NbyN;i++){
+        blockPrefab[i][0].EndPos=new Grid(0,i)
+    }
+
+    for(let j=1 ; j<NbyN ; j++){
+        for(let i=0 ; i<NbyN ; i++){
+            blockPrefab[i][j].EndPos=new Grid(j-1,i)
+        }
+    }
+
+    for(let z=0;z<NbyN-1;z++){
+        for(let j=1;j<NbyN;j++){
+            for(let i=0;i<NbyN;i++){
+                if(blockPrefab[i][j-1].Value==0){        //우측 공간이 비어있을 경우
+                    blockPrefab[i][j].EndPos = new Grid(j-1,i)
+                    blockPrefab[i][j-1].Value=blockPrefab[i][j].Value
+                    blockPrefab[i][j].Value=0
+                } else{                     //우측 공간에 무엇인가 있을 경우
+                    if(blockPrefab[i][j].Value==blockPrefab[i][j-1].Value){         //같은 값이 있을 경우
+                        if(blockPrefab[i][j].Added&&blockPrefab[i][j-1].Added){     //조합했던 이력 확인
+                            blockPrefab[i][j].EndPos = new Grid(j-1,i)
+                            blockPrefab[i][j-1].Value=blockPrefab[i][j].Value+blockPrefab[i][j-1].Value
+                            blockPrefab[i][j].Value=0
+                            blockPrefab[i][j-1].Added=false //조합 비활성화
+                            score+=100
+                        }
+                        else{blockPrefab[i][j].EndPos = new Grid(j,i)}
+                    } 
+                    else{blockPrefab[i][j].EndPos = new Grid(j,i)}
                 }
             }
-            fillStyle()
         }
     }
 }
 
 /* 상단이동 */
 function move_Up(){
+     /*위치 계산 완료*/
+     Up_index()
+
+     /*Grid형태 Vector*/
+     var vector=new Grid(0,-50)
+     /*Grid형태 EndPos*/
+     for(let i=0;i<NbyN;i++){
+         for(let j=0;j<NbyN;j++){
+             blockPrefab[i][j].V=new Grid(0,0)
+             if(i>0){blockPrefab[i][j].V=vector}
+             console.log(blockPrefab[i][j].V)
+         }
+     }   //여기까지 EndLine인 배열 끝에 있는 VecQ를 제외한 동일한 벡터값과 EndPos를 EndLine으로 지정함
+}
+function Up_index(){
+    for(let i=0;i<NbyN;i++){
+        blockPrefab[0][i].EndPos=new Grid(i,0)
+    }
+    for(let j=0;j<NbyN;j++){
+        for(let i=1;i<NbyN;i++){
+            blockPrefab[i][j].EndPos=new Grid(j,i-1)
+        }
+    }
     for(let z=0;z<NbyN-1;z++){
         for(let i=1;i<NbyN;i++){
             for(let j=0;j<NbyN;j++){
-                if(blockPrefab[i-1][j].Value==0){        //우측 공간이 비어있을 경우   
+                if(blockPrefab[i-1][j].Value==0){        //우측 공간이 비어있을 경우
+                    blockPrefab[i][j].EndPos = new Grid(j,i-1)
                     blockPrefab[i-1][j].Value=blockPrefab[i][j].Value
                     blockPrefab[i][j].Value=0
                 } else{                     //우측 공간에 무엇인가 있을 경우
                     if(blockPrefab[i][j].Value==blockPrefab[i-1][j].Value){         //같은 값이 있을 경우
                         if(blockPrefab[i][j].Added&&blockPrefab[i-1][j].Added){     //조합했던 이력 확인
+                            blockPrefab[i][j].EndPos = new Grid(j,i-1)
                             blockPrefab[i-1][j].Value=blockPrefab[i][j].Value+blockPrefab[i-1][j].Value
                             blockPrefab[i][j].Value=0
                             blockPrefab[i-1][j].Added=false //조합 비활성화
                             score+=100
-                            fillScore(score)
                         }
+                        else{blockPrefab[i][j].EndPos = new Grid(j,i)}
+                    } 
+                    else{blockPrefab[i][j].EndPos = new Grid(j,i)
                     }
                 }
-                fillStyle()
             }
-        }
-    }
-    for(let i=0;i<NbyN;i++){
-        for(let j=0;j<NbyN;j++){
-            blockPrefab[i][j].Added=true
         }
     }
 }
 
 /* 하단이동 */
 function move_Down(){
-    for(let z=0;z<NbyN-1;z++){
-        for(let i=NbyN-2;i>=0;i--){
-            for(let j=NbyN-1;j>=0;j--){
-                if(blockPrefab[i+1][j].Value==0){        //우측 공간이 비어있을 경우   
-                    blockPrefab[i+1][j].Value=blockPrefab[i][j].Value
-                    blockPrefab[i][j].Value=0
-                } else{                     //우측 공간에 무엇인가 있을 경우
-                    if(blockPrefab[i][j].Value==blockPrefab[i+1][j].Value){         //같은 값이 있을 경우
+    /*위치 계산 완료*/
+    Down_index()
+
+    /*Grid형태 Vector*/
+    var vector=new Grid(0,50)
+    /*Grid형태 EndPos*/
+    for(let i=0;i<NbyN;i++) {
+        for(let j=0;j<NbyN;j++) {
+            blockPrefab[i][j].V=new Grid(0,0)
+            if(i<3){blockPrefab[i][j].V=vector}
+            console.log(blockPrefab[i][j].V)
+        }
+    }   //여기까지 EndLine인 배열 끝에 있는 VecQ를 제외한 동일한 벡터값과 EndPos를 EndLine으로 지정함
+}
+function Down_index(){
+    for(let i=0;i<NbyN;i++){
+        blockPrefab[3][i].EndPos=new Grid(i,3)
+    }
+    for(let j=0;j<NbyN;j++){
+        for(let i=0;i<NbyN-1;i++){
+            blockPrefab[i][j].EndPos=new Grid(j,i+1)
+        }
+    }
+
+    for(let z=0 ; z<NbyN-1 ; z++){
+        for(let i=NbyN-2 ; i>=0 ; i--){
+            for(let j=0 ; j<NbyN ; j++){
+                if(blockPrefab[i+1][j].Value==0){        //밑측 공간이 비어있을 경우
+                    blockPrefab[i][j].EndPos = new Grid(j,i+1)
+                    blockPrefab[i+1][j].Value = blockPrefab[i][j].Value
+                    blockPrefab[i][j].Value = 0
+                } else{                                 //밑측 공간에 무엇인가 있을 경우
+                    if( blockPrefab[i][j].Value == blockPrefab[i+1][j].Value ){     //같은 값이 있을 경우
                         if(blockPrefab[i][j].Added&&blockPrefab[i+1][j].Added){     //조합했던 이력 확인
+                            blockPrefab[i][j].EndPos = new Grid(j,i+1)
                             blockPrefab[i+1][j].Value=blockPrefab[i][j].Value+blockPrefab[i+1][j].Value
                             blockPrefab[i][j].Value=0
                             blockPrefab[i+1][j].Added=false //조합 비활성화
                             score+=100
-                            fillScore(score)
                         }
-                    }
+                        else{ blockPrefab[i][j].EndPos = new Grid(j,i) }
+                    } 
+                    else{blockPrefab[i][j].EndPos = new Grid(j,i)}
                 }
-                fillStyle()
             }
         }
     }
-    for(let i=0;i<NbyN;i++){
-        for(let j=0;j<NbyN;j++){
-            blockPrefab[i][j].Added=true
-        }
-    }
 }
-
-//#region Vector계산용 
-function calculate_Vector(A,B){
-    let tmp_vector=new Grid(0,0)
-    tmp_vector.X=(B.X-A.X)/15
-    tmp_vector.Y=(B.Y-A.Y)/15
-    return tmp_vector
-}
-
-//#endregion
