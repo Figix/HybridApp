@@ -26,6 +26,7 @@ class BlockPrefab{
 }
 /* js에서 다룰 구조체 */
 var blockPrefab = Array.from(Array(NbyN), () => new Array(NbyN).fill(0))
+
 for(var i=0;i<NbyN;i++){
     for(var j=0;j<NbyN;j++){
         blockPrefab[i][j]=new BlockPrefab()
@@ -37,14 +38,18 @@ for(var i=0;i<NbyN;i++){
         blockPrefab[i][j].Elementsinfo.style.marginLeft = blockPrefab[i][j].Grid.X+"px";
     }
 }
+
 /* CSS class List */
 let classNameList = new Array(11)
 for(let z=0;z<classNameList.length;z++){
     classNameList[z]='block_'+Math.pow(2,z+1)
 }
+
 /*score*/
 var score=0
 var scoreBoard=document.getElementById("scoreBoard")
+
+var gameover=false
 /*---------------------------------------------버튼 초기화 부분---------------------------------------------------------*/
 let btn = document.getElementsByClassName("btn")
 btn[0].addEventListener("click",function(event){
@@ -66,9 +71,33 @@ btn[0].addEventListener("click",function(event){
     score=0
     fillScore(score)
     /* 시작 랜덤 값 추가 */
+    gameover=false
     Random_generator(true)
     setBeginPos()
 })
+function newGame(){
+    clearInterval(move_animation_right)
+    clearInterval(move_animation_Down)
+
+    /* 블럭 값 관련 초기화 */
+    for(var i=0;i<NbyN;i++){
+        for(var j=0;j<NbyN;j++){
+            blockPrefab[i][j].Value=0
+            blockPrefab[i][j].count=1
+            blockPrefab[i][j].switch1=false
+            blockPrefab[i][j].switch2=false
+        }
+    }
+    anime_bool=true
+
+    /*score 초기화*/
+    score=0
+    fillScore(score)
+    /* 시작 랜덤 값 추가 */
+    gameover=false
+    Random_generator(true)
+    setBeginPos()
+}
 /*---------------------------------------------------------------------------------------------------------------------*/
 //#endregion
 
@@ -90,7 +119,11 @@ function Random_generator(aaa){ //매개변수가 true: 2or4, false: 2 생성, r
         }
     }
 
-    if(count==0){return false}
+    if(count==0){
+        alert("게임 종료 새 게임에 진행합니다.")
+        newGame()
+        return false
+    }
     let rnd = Math.floor(Math.random()*(count-1))+1
     count=0
     for(let i=0;i<NbyN;i++){
@@ -198,7 +231,10 @@ function setBeginPos(){
 //#endregion
 
 //#region 키보드 입력 관련
-document.addEventListener('keydown', (event) => { keystate(event) });
+document.addEventListener('keydown', (event) => { if(anime_bool){
+    keystate(event)
+    anime_bool=false
+} });
 // window.onkeydown = (e)=>keystate(e); 이런 방식도 존재함
 var anime_bool=true;
 var move_animation_right
@@ -206,40 +242,28 @@ var move_animation_Down
 function keystate(event){
     switch(event.code){
         case "ArrowRight":
-            if(anime_bool){
                 console.log(event);
                 move_Right()
-                anime_bool=false;
                 move_animation_right = setInterval(moving_plus,1000/30)
-            }
             break;
             
 
         case "ArrowLeft":
-            if(anime_bool){
                 console.log(event)
                 move_Left()
-                anime_bool=false
                 move_animation_Down = setInterval(moving_minus,1000/30)
-            }
             break;
 
         case "ArrowUp":
-            if(anime_bool){
                 console.log(event)
                 move_Up()
-                anime_bool=false
                 move_animation_Down = setInterval(moving_minus,1000/30)
-            }
             break;
 
         case "ArrowDown":
-            if(anime_bool){
                 console.log(event);
                 move_Down()
-                anime_bool=false;
                 move_animation_right = setInterval(moving_plus,1000/30)
-            }
             break;
     }
 }
@@ -296,6 +320,9 @@ function moving_plus(){
                 blockPrefab[i][j].count=1
                 blockPrefab[i][j].Elementsinfo.style.marginTop=  blockPrefab[i][j].Grid.Y+"px";
                 blockPrefab[i][j].Elementsinfo.style.marginLeft= blockPrefab[i][j].Grid.X+"px";
+                if(blockPrefab[i][j].Value>=2048){
+                    alert("게임승리!")
+                }
             }
         }
         Random_generator(false)
